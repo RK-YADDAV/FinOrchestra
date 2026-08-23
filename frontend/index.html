@@ -223,12 +223,18 @@
                     
                     buffer += decoder.decode(value, { stream: true });
                     
-                    const lines = buffer.split('\n\n');
+                    const lines = buffer.split(/\r?\n\r?\n/);
                     buffer = lines.pop(); // keep incomplete chunk
 
                     for (const line of lines) {
+                        let dataStr = null;
                         if (line.startsWith('data: ')) {
-                            const dataStr = line.substring(6);
+                            dataStr = line.substring(6);
+                        } else if (line.startsWith('data:')) {
+                            dataStr = line.substring(5);
+                        }
+                        
+                        if (dataStr !== null) {
                             if (dataStr.trim() === '') continue;
                             
                             try {

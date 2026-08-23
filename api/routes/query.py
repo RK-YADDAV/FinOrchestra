@@ -48,7 +48,7 @@ async def submit_query(request: Request, body: QueryRequest):
                 if message.get("type") != "message":
                     continue
                 data = message.get("data", "{}")
-                yield f"data: {data}\n\n"
+                yield data
                 
                 parsed = json.loads(data)
                 if parsed.get("event_type") in ("done", "error"):
