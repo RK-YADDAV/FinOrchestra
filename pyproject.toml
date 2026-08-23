@@ -1,0 +1,14 @@
+[project]
+name = "finorchestra-india"
+version = "0.1.0"
+description = "ArthGraph - Async multi-agent orchestration engine for Indian financial intelligence"
+requires-python = ">=3.11"
+readme = "README.md"
+
+[build-system]
+requires = ["setuptools>=68.0"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]

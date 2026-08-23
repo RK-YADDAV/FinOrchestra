@@ -1,0 +1,24 @@
+# Core Framework
+fastapi==0.115.12
+uvicorn[standard]==0.34.3
+sse-starlette==2.3.5
+pydantic==2.11.4
+
+# Database
+sqlalchemy[asyncio]==2.0.41
+asyncpg==0.31.0
+pgvector==0.4.2
+
+# Redis
+redis[hiredis]==6.2.0
+
+# Google Gemini AI
+google-genai==1.16.1
+
+# Utilities
+python-dotenv==1.1.0
+httpx==0.28.1
+
+# Testing
+pytest==8.4.1
+pytest-asyncio==1.0.0
