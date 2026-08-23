@@ -1,5 +1,6 @@
 import json
 import asyncio
+import re
 from core.context import SharedState, RetrievedChunk
 from core.budget import ContextBudgetManager
 from core.tools import execute_tool_with_retry, tool_filings_rag
@@ -14,12 +15,13 @@ Retrieved Chunks:
 {chunks}
 
 Tasks:
-1. Extract key reported figures in \u20b9 Crores (Revenue, EBITDA, PAT, Net Debt).
+1. Extract key reported figures in ₹ Crores (Revenue, EBITDA, PAT, Net Debt).
 2. Identify missing footnotes (e.g. Note 32 Related Party Transactions, Contingent Liabilities).
 3. Output on a new line:
-SECOND_HOP_QUERY: <targeted search query for missing disclosures or notes>"""
+SECOND_HOP_QUERY: <targeted search query for missing disclosures or notes>
+If no missing notes, output: SECOND_HOP_QUERY: NONE"""
 
-class RetrievalAgent(BaseAgent):
+class IndianFilingRetrievalAgent(BaseAgent):
     def __init__(self):
         super().__init__("retrieval")
 
@@ -56,9 +58,59 @@ class RetrievalAgent(BaseAgent):
                     )
                     state.chunks.append(chunk)
 
-            # NOTE: Hop 2 logic is stubbed out for simplicity, 
-            # in a full implementation we would call the LLM with RETRIEVAL_HOP1_PROMPT
-            # parse out the SECOND_HOP_QUERY and call tool_filings_rag again.
+            if not state.chunks:
+                state.add_event(self.agent_id, "RETRIEVAL_DONE", {"chunks_retrieved": 0})
+                return
+
+            # Execute Hop 2 Logic
+            chunks_text = "\n\n".join([f"[{c.source_tag}] {c.text}" for c in state.chunks])
+            prompt = RETRIEVAL_HOP1_PROMPT.format(query=state.query, chunks=chunks_text)
+            
+            await budget_mgr.consume(self.agent_id, prompt)
+            resp = await asyncio.to_thread(
+                self.client.models.generate_content,
+                model="gemini-2.5-flash",
+                contents=prompt
+            )
+            
+            second_hop_query = None
+            for line in resp.text.splitlines():
+                if line.strip().startswith("SECOND_HOP_QUERY:"):
+                    q = line.split("SECOND_HOP_QUERY:")[1].strip()
+                    if q and q.upper() != "NONE":
+                        second_hop_query = q
+                    break
+
+            if second_hop_query:
+                state.add_event(self.agent_id, "RETRIEVAL_HOP2_START", {"query": second_hop_query})
+                res2 = await execute_tool_with_retry(
+                    tool_fn=tool_filings_rag,
+                    tool_name="tool_filings_rag",
+                    agent_id=self.agent_id,
+                    state=state,
+                    tool_kwargs={
+                        "query": second_hop_query,
+                        "ticker": state.ticker,
+                        "db_engine": db_engine,
+                        "embed_client": self.client,
+                        "limit": 3
+                    },
+                    max_retries=2
+                )
+                if res2.success and res2.data:
+                    for chunk_data in res2.data.get("chunks", []):
+                        # Avoid duplicates
+                        if not any(c.id == chunk_data["id"] for c in state.chunks):
+                            chunk = RetrievedChunk(
+                                id=chunk_data["id"],
+                                company=chunk_data["company"],
+                                ticker=chunk_data["ticker"],
+                                document_type=chunk_data["doc_type"],
+                                text=chunk_data["text"],
+                                source_tag=f"[BSE:{chunk_data['ticker']}:{chunk_data['doc_type']}]",
+                                relevance_score=chunk_data["relevance"]
+                            )
+                            state.chunks.append(chunk)
             
             state.add_event(self.agent_id, "RETRIEVAL_DONE", {"chunks_retrieved": len(state.chunks)})
             

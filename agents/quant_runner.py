@@ -18,7 +18,7 @@ Standard Formulas:
 
 Return ONLY executable Python code inside ```python ... ``` blocks."""
 
-class QuantRunnerAgent(BaseAgent):
+class QuantToolRunnerAgent(BaseAgent):
     def __init__(self):
         super().__init__("quant_runner")
 

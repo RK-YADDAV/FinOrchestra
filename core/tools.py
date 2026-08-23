@@ -157,13 +157,13 @@ async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_c
 
     # Generate 768-dim query embedding
     try:
-        emb_resp = await embed_client.models.embed_content(
-            model="text-embedding-004", 
+        emb_resp = embed_client.models.embed_content(
+            model="gemini-embedding-001", 
             contents=query
         )
         # Handle the returned structure properly for new genai sdk
-        embedding_values = emb_resp.embeddings[0].values
-        emb_str = "[" + ",".join(str(x) for x in embedding_values) + "]"
+        query_vector = emb_resp.embeddings[0].values[:768]
+        emb_str = "[" + ",".join(str(x) for x in query_vector) + "]"
     except Exception as e:
         return ToolResult(success=False, error_code="EXEC_ERROR", error_message=f"Embedding failed: {e}", tool_name="filings_rag", latency_ms=(time.monotonic() - start) * 1000)
 

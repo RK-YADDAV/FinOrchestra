@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinOrchestra</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .log-container {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        /* Custom scrollbar for dark mode */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1f2937; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #4b5563; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #6b7280; 
+        }
+    </style>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#3b82f6',
+                        darkbg: '#0f172a',
+                        cardbg: '#1e293b'
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-darkbg text-gray-100 min-h-screen flex flex-col items-center py-10 px-4">
+    <div class="w-full max-w-5xl space-y-6">
+        
+        <!-- Header -->
+        <header class="flex justify-between items-end border-b border-gray-700 pb-4">
+            <div>
+                <h1 class="text-4xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-emerald-400">FinOrchestra India</h1>
+                <p class="text-gray-400 mt-2">Multi-Agent Financial Research Platform</p>
+            </div>
+            <div class="text-right">
+                <p class="text-sm text-gray-400">Tokens Used</p>
+                <p id="tokenCount" class="text-2xl font-mono text-blue-400">0 / 24000</p>
+            </div>
+        </header>
+
+        <!-- Input Section -->
+        <section class="bg-cardbg rounded-xl p-6 shadow-lg border border-gray-700">
+            <form id="queryForm" class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-400 mb-1">Financial Query</label>
+                    <textarea id="queryInput" rows="2" class="w-full bg-gray-800 text-white rounded-lg border border-gray-600 p-3 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="e.g. What was Reliance Industries' consolidated EBITDA for FY24?" required></textarea>
+                </div>
+                <div class="flex gap-4">
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Company (Optional)</label>
+                        <input type="text" id="companyInput" class="w-full bg-gray-800 text-white rounded-lg border border-gray-600 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="Reliance Industries">
+                    </div>
+                    <div class="flex-1">
+                        <label class="block text-sm font-medium text-gray-400 mb-1">Ticker (Optional)</label>
+                        <input type="text" id="tickerInput" class="w-full bg-gray-800 text-white rounded-lg border border-gray-600 p-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" placeholder="RELIANCE">
+                    </div>
+                </div>
+                
+                <!-- Quick Templates -->
+                <div>
+                    <p class="text-xs text-gray-400 mb-2">Try an example:</p>
+                    <div class="flex flex-wrap gap-2" id="templates">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+
+                <div class="flex justify-end">
+                    <button type="submit" id="submitBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-6 rounded-lg transition-colors flex items-center gap-2">
+                        <span>Analyze</span>
+                        <svg class="w-4 h-4 hidden" id="spinner" fill="none" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                    </button>
+                </div>
+            </form>
+        </section>
+
+        <!-- Main Content Area -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6" id="resultsArea" style="display: none;">
+            
+            <!-- Mid-steps & Tool calls -->
+            <section class="bg-cardbg rounded-xl p-6 shadow-lg border border-gray-700 flex flex-col max-h-[800px]">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2">Agent Trace</h2>
+                <div id="logContainer" class="flex-1 overflow-y-auto space-y-3 pr-2">
+                    <!-- Logs injected here -->
+                </div>
+            </section>
+
+            <!-- Final Result & Provenance -->
+            <section class="bg-cardbg rounded-xl p-6 shadow-lg border border-gray-700 flex flex-col max-h-[800px]">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2 text-emerald-400">Final Memo</h2>
+                <div id="memoContainer" class="flex-1 overflow-y-auto prose prose-invert max-w-none text-gray-300">
+                    <p class="text-gray-500 italic">Waiting for agents to finish...</p>
+                </div>
+                
+                <div id="provenanceSection" class="mt-4 border-t border-gray-700 pt-4 hidden">
+                    <h3 class="text-sm font-semibold text-gray-400 mb-2 uppercase tracking-wider">Provenance / Evidence</h3>
+                    <ul id="provenanceList" class="space-y-2 text-sm">
+                    </ul>
+                </div>
+            </section>
+
+        </div>
+    </div>
+
+    <script>
+        const templates = [
+            "What was Reliance Industries' consolidated EBITDA for FY24?",
+            "Calculate HDFC Bank's CASA ratio from its post-merger FY24 Annual Report.",
+            "What was Tata Motors' net auto debt reduction in FY24?",
+            "Analyze asset quality and Gross NPA trajectory across top Indian PSU banks (SBI, BoB, PNB).",
+            "Compare capital allocation and EV investments between Tata Motors and Mahindra & Mahindra."
+        ];
+
+        const templatesContainer = document.getElementById('templates');
+        const queryInput = document.getElementById('queryInput');
+
+        templates.forEach(t => {
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'text-xs bg-gray-700 hover:bg-gray-600 text-gray-300 px-3 py-1 rounded-full transition-colors truncate max-w-xs text-left';
+            btn.textContent = t;
+            btn.onclick = () => { queryInput.value = t; };
+            templatesContainer.appendChild(btn);
+        });
+
+        const form = document.getElementById('queryForm');
+        const submitBtn = document.getElementById('submitBtn');
+        const spinner = document.getElementById('spinner');
+        const resultsArea = document.getElementById('resultsArea');
+        const logContainer = document.getElementById('logContainer');
+        const memoContainer = document.getElementById('memoContainer');
+        const provenanceSection = document.getElementById('provenanceSection');
+        const provenanceList = document.getElementById('provenanceList');
+        const tokenCount = document.getElementById('tokenCount');
+
+        function appendLog(agent, type, details, isError = false) {
+            const el = document.createElement('div');
+            const bgClass = isError ? 'bg-red-900/20 border-red-800' : 'bg-gray-800 border-gray-700';
+            const textClass = isError ? 'text-red-400' : 'text-blue-400';
+            
+            let detailsHtml = '';
+            if (typeof details === 'object') {
+                detailsHtml = `<pre class="mt-2 text-xs text-gray-400 bg-gray-900 p-2 rounded overflow-x-auto">${JSON.stringify(details, null, 2)}</pre>`;
+            } else if (details) {
+                detailsHtml = `<p class="mt-1 text-sm text-gray-300">${details}</p>`;
+            }
+
+            el.className = `p-3 rounded-lg border ${bgClass}`;
+            el.innerHTML = `
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-gray-500">${agent || 'SYSTEM'}</span>
+                    <span class="text-xs font-mono px-2 py-0.5 rounded ${isError ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}">${type}</span>
+                </div>
+                ${detailsHtml}
+            `;
+            logContainer.appendChild(el);
+            logContainer.scrollTop = logContainer.scrollHeight;
+        }
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+            
+            // Reset UI
+            submitBtn.disabled = true;
+            spinner.classList.remove('hidden');
+            resultsArea.style.display = 'grid';
+            logContainer.innerHTML = '';
+            memoContainer.innerHTML = '<p class="text-gray-500 italic">Processing request... waiting for synthesis...</p>';
+            provenanceSection.classList.add('hidden');
+            provenanceList.innerHTML = '';
+            tokenCount.textContent = '0 / 24000';
+            
+            const payload = {
+                query: queryInput.value,
+                company: document.getElementById('companyInput').value,
+                ticker: document.getElementById('tickerInput').value
+            };
+
+            appendLog('SYSTEM', 'START', 'Connecting to backend stream...');
+
+            try {
+                const response = await fetch('http://localhost:8000/v1/query', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errText = await response.text();
+                    appendLog('SYSTEM', 'ERROR', `HTTP Error ${response.status}: ${errText}`, true);
+                    return;
+                }
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+                    
+                    buffer += decoder.decode(value, { stream: true });
+                    
+                    const lines = buffer.split('\n\n');
+                    buffer = lines.pop(); // keep incomplete chunk
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const dataStr = line.substring(6);
+                            if (dataStr.trim() === '') continue;
+                            
+                            try {
+                                const data = JSON.parse(dataStr);
+                                
+                                if (data.event_type === 'BUDGET_UPDATE') {
+                                    tokenCount.textContent = `${data.total_used} / ${data.total_max}`;
+                                } else if (data.event_type === 'step') {
+                                    const step = data.step_data;
+                                    appendLog(step.agent, step.event_type, step.details);
+                                } else if (data.event_type === 'done') {
+                                    appendLog('SYSTEM', 'DONE', 'Pipeline finished successfully.');
+                                    memoContainer.innerHTML = marked.parse(data.final_memo || '');
+                                    
+                                    if (data.provenance && data.provenance.length > 0) {
+                                        provenanceSection.classList.remove('hidden');
+                                        data.provenance.forEach(p => {
+                                            const li = document.createElement('li');
+                                            li.innerHTML = `<span class="bg-emerald-900/30 text-emerald-400 px-2 py-0.5 rounded text-xs mr-2">${p.source_tag}</span> <span class="text-gray-400">${p.sentence}</span>`;
+                                            provenanceList.appendChild(li);
+                                        });
+                                    }
+                                    
+                                } else if (data.event_type === 'error') {
+                                    appendLog('SYSTEM', 'ERROR', data.error, true);
+                                    memoContainer.innerHTML = '<p class="text-red-400">An error occurred. Check traces.</p>';
+                                }
+                            } catch (e) {
+                                console.error('Failed to parse SSE data', dataStr, e);
+                            }
+                        }
+                    }
+                }
+            } catch (err) {
+                appendLog('SYSTEM', 'ERROR', err.message, true);
+            } finally {
+                submitBtn.disabled = false;
+                spinner.classList.add('hidden');
+            }
+        };
+    </script>
+</body>
+</html>
