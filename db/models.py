@@ -97,17 +97,59 @@ class AnnualReportChunk(Base):
     __tablename__ = "annual_report_chunks"
 
     id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    parent_id: Mapped[Optional[uuid.UUID]] = mapped_column(UUID(as_uuid=True), ForeignKey("annual_report_chunks.id", ondelete="CASCADE"), nullable=True)
     company: Mapped[str] = mapped_column(String(100), nullable=False)
     ticker: Mapped[str] = mapped_column(String(20), nullable=False)
     fiscal_year: Mapped[int] = mapped_column(Integer, nullable=False)
     doc_type: Mapped[str] = mapped_column(String(50), nullable=False)
+    chunk_type: Mapped[str] = mapped_column(String(20), nullable=False, default="text") # 'text', 'table', 'table_row', 'image_summary', 'chart_summary'
     content: Mapped[str] = mapped_column(Text, nullable=False)
+    metadata_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB)
     embedding = mapped_column(Vector(768), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
+    # Parent-child relationships
+    parent: Mapped[Optional["AnnualReportChunk"]] = relationship("AnnualReportChunk", remote_side=[id], back_populates="children")
+    children: Mapped[List["AnnualReportChunk"]] = relationship("AnnualReportChunk", back_populates="parent", cascade="all, delete-orphan")
+
     __table_args__ = (
         Index("idx_report_chunks_ticker", "ticker", "fiscal_year"),
+        Index("idx_report_chunks_parent", "parent_id"),
+        Index("idx_report_chunks_type", "chunk_type"),
         # HNSW index created via DDL: idx_report_chunks_hnsw
+    )
+
+class KnowledgeNode(Base):
+    """Graph RAG: Represents an entity (Company, Director, Subsidiary, Auditor, etc.)"""
+    __tablename__ = "knowledge_nodes"
+
+    id: Mapped[str] = mapped_column(String(255), primary_key=True) # e.g. "TATA_MOTORS", "N_CHANDRASEKARAN"
+    node_type: Mapped[str] = mapped_column(String(50), nullable=False) # 'COMPANY', 'PERSON', 'METRIC', 'SUBSIDIARY'
+    name: Mapped[str] = mapped_column(String(255), nullable=False)
+    properties: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB) # extra info
+    embedding = mapped_column(Vector(768), nullable=True) # Optional vector representation of the entity
+
+    # Relationships
+    outgoing_edges: Mapped[List["KnowledgeEdge"]] = relationship("KnowledgeEdge", foreign_keys="[KnowledgeEdge.source_id]", back_populates="source_node", cascade="all, delete-orphan")
+    incoming_edges: Mapped[List["KnowledgeEdge"]] = relationship("KnowledgeEdge", foreign_keys="[KnowledgeEdge.target_id]", back_populates="target_node", cascade="all, delete-orphan")
+
+class KnowledgeEdge(Base):
+    """Graph RAG: Represents a relationship between two entities"""
+    __tablename__ = "knowledge_edges"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    source_id: Mapped[str] = mapped_column(String(255), ForeignKey("knowledge_nodes.id", ondelete="CASCADE"), nullable=False)
+    target_id: Mapped[str] = mapped_column(String(255), ForeignKey("knowledge_nodes.id", ondelete="CASCADE"), nullable=False)
+    relation_type: Mapped[str] = mapped_column(String(100), nullable=False) # 'IS_DIRECTOR_OF', 'OWNS_SUBSIDIARY', 'AUDITED_BY', 'HAS_METRIC'
+    description: Mapped[Optional[str]] = mapped_column(Text) # e.g., "Holds 45% stake"
+
+    source_node: Mapped["KnowledgeNode"] = relationship("KnowledgeNode", foreign_keys=[source_id], back_populates="outgoing_edges")
+    target_node: Mapped["KnowledgeNode"] = relationship("KnowledgeNode", foreign_keys=[target_id], back_populates="incoming_edges")
+
+    __table_args__ = (
+        Index("idx_graph_edges_source", "source_id"),
+        Index("idx_graph_edges_target", "target_id"),
+        Index("idx_graph_edges_relation", "relation_type"),
     )
 
 

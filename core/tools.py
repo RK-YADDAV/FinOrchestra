@@ -157,8 +157,9 @@ async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_c
 
     # Generate 768-dim query embedding
     try:
-        emb_resp = embed_client.models.embed_content(
-            model="gemini-embedding-001", 
+        emb_resp = await asyncio.to_thread(
+            embed_client.models.embed_content,
+            model="text-embedding-004", 
             contents=query
         )
         # Handle the returned structure properly for new genai sdk
@@ -212,7 +213,7 @@ async def tool_indian_sql(nl_query: str, db_engine, llm_client) -> ToolResult:
     prompt = f"Convert to PostgreSQL SQL (SELECT only):\nSchema: {SCHEMA_DESCRIPTION}\nQuery: {nl_query}\nReturn ONLY the SQL string without markdown blocks or explanation."
     try:
         resp = await llm_client.models.generate_content(
-            model="gemini-2.5-flash", 
+            model="gemini-3.6-flash", 
             contents=prompt
         )
         sql = resp.text.strip().strip("```sql").strip("```").strip()
