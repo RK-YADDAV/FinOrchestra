@@ -22,3 +22,4 @@ httpx==0.28.1
 # Testing
 pytest==8.4.1
 pytest-asyncio==1.0.0
+sentence-transformers

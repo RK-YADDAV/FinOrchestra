@@ -113,7 +113,7 @@ FinOrchestra-India/
 │
 ├── scripts/                              # Maintenance & Seeding Utilities
 │   ├── __init__.py
-│   ├── seed_kb.py                        # Seeds 30 Indian corporate filings into pgvector (768d)
+│   ├── seed_kb.py                        # Seeds 30 Indian corporate filings into pgvector (384d)
 │   └── leakage_check.py                  # Validates zero ground-truth leakage in seed chunks
 │
 └── tests/                                # Unit & Integration Test Suite
@@ -132,7 +132,7 @@ FinOrchestra-India/
 
 ### 1.1 Objective & Deliverables
 Set up the foundational cloud services (no Docker required):
-- **Supabase PostgreSQL (with `pgvector`)**: Cloud-hosted PostgreSQL to store text chunks from Indian Annual Reports with 768-dimensional embeddings, as well as job execution traces. Create a free project at [supabase.com](https://supabase.com) and enable the `vector` extension.
+- **Supabase PostgreSQL (with `pgvector`)**: Cloud-hosted PostgreSQL to store text chunks from Indian Annual Reports with 384-dimensional embeddings, as well as job execution traces. Create a free project at [supabase.com](https://supabase.com) and enable the `vector` extension.
 - **Upstash Redis**: Serverless Redis for real-time Server-Sent Events (SSE) streaming and market quote caching. Create a free database at [upstash.com](https://upstash.com) and copy the `UPSTASH_REDIS_URL`.
 - **SQLAlchemy 2.0 Async Session Layer**: Configured with connection pooling for FastAPI and `NullPool` for isolated background tasks.
 

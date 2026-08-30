@@ -105,7 +105,7 @@ class AnnualReportChunk(Base):
     chunk_type: Mapped[str] = mapped_column(String(20), nullable=False, default="text") # 'text', 'table', 'table_row', 'image_summary', 'chart_summary'
     content: Mapped[str] = mapped_column(Text, nullable=False)
     metadata_json: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB)
-    embedding = mapped_column(Vector(768), nullable=False)
+    embedding = mapped_column(Vector(384), nullable=False)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
 
     # Parent-child relationships
@@ -127,7 +127,7 @@ class KnowledgeNode(Base):
     node_type: Mapped[str] = mapped_column(String(50), nullable=False) # 'COMPANY', 'PERSON', 'METRIC', 'SUBSIDIARY'
     name: Mapped[str] = mapped_column(String(255), nullable=False)
     properties: Mapped[Optional[Dict[str, Any]]] = mapped_column(JSONB) # extra info
-    embedding = mapped_column(Vector(768), nullable=True) # Optional vector representation of the entity
+    embedding = mapped_column(Vector(384), nullable=True) # Optional vector representation of the entity
 
     # Relationships
     outgoing_edges: Mapped[List["KnowledgeEdge"]] = relationship("KnowledgeEdge", foreign_keys="[KnowledgeEdge.source_id]", back_populates="source_node", cascade="all, delete-orphan")

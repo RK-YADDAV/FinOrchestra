@@ -41,7 +41,7 @@ graph TB
     end
 
     subgraph StorageLayer ["4. Memory & Observability"]
-        PG["Supabase PostgreSQL + pgvector (768d)\n• annual_report_chunks (HNSW)\n• jobs & execution_events\n• tool_calls (GIN indexed)\n• eval_results (STORED composite score)"]
+        PG["Supabase PostgreSQL + pgvector (384d)\n• annual_report_chunks (HNSW)\n• jobs & execution_events\n• tool_calls (GIN indexed)\n• eval_results (STORED composite score)"]
     end
 
     Client -->|POST /v1/query| API

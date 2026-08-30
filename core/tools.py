@@ -151,28 +151,33 @@ async def tool_quant_math_sandbox(code: str, timeout_seconds: float = 10.0) -> T
         return ToolResult(success=False, error_code="TIMEOUT", error_message=f"Exceeded timeout of {timeout_seconds}s", tool_name="quant_math_sandbox", latency_ms=(time.monotonic() - start) * 1000)
 
 
+_embedding_model = None
+
+def get_embedding_model():
+    global _embedding_model
+    if _embedding_model is None:
+        from sentence_transformers import SentenceTransformer
+        _embedding_model = SentenceTransformer('all-MiniLM-L6-v2')
+    return _embedding_model
+
 async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_client, limit: int = 5) -> ToolResult:
     start = time.monotonic()
     from sqlalchemy import text
 
-    # Generate 768-dim query embedding
+    # Generate 384-dim query embedding
     try:
-        emb_resp = await asyncio.to_thread(
-            embed_client.models.embed_content,
-            model="gemini-embedding-001", 
-            contents=query
-        )
-        # Handle the returned structure properly for new genai sdk
-        query_vector = emb_resp.embeddings[0].values[:768]
-        emb_str = "[" + ",".join(str(x) for x in query_vector) + "]"
+        model = get_embedding_model()
+        query_vector = await asyncio.to_thread(model.encode, query)
+        emb_str = "[" + ",".join(str(x) for x in query_vector.tolist()) + "]"
     except Exception as e:
         return ToolResult(success=False, error_code="EXEC_ERROR", error_message=f"Embedding failed: {e}", tool_name="filings_rag", latency_ms=(time.monotonic() - start) * 1000)
 
     sql = """
         SELECT id, company, ticker, fiscal_year, doc_type, content,
-               1 - (embedding <=> :emb::vector(768)) AS relevance
+               1 - (embedding <=> CAST(:emb AS vector(384))) AS relevance
         FROM annual_report_chunks
-        ORDER BY embedding <=> :emb::vector(768)
+        WHERE (CAST(:ticker AS VARCHAR) IS NULL OR ticker = :ticker)
+        ORDER BY embedding <=> CAST(:emb AS vector(384))
         LIMIT :limit
     """
 

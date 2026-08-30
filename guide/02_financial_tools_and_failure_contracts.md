@@ -174,23 +174,23 @@ async def tool_quant_math_sandbox(code: str, timeout_seconds: float = 10.0) -> T
 ```
 
 ### Tool 3: `tool_filings_rag` (BSE/NSE Vector Search)
-- **Role**: Searches 768-dimensional embeddings of Indian Annual Reports (MDA, Notes to Accounts, Auditor's Report) and Concall Transcripts using cosine distance (`<=>`).
+- **Role**: Searches 384-dimensional embeddings of Indian Annual Reports (MDA, Notes to Accounts, Auditor's Report) and Concall Transcripts using cosine distance (`<=>`).
 
 ```python
 async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_client, limit: int = 5) -> ToolResult:
     start = time.monotonic()
     from sqlalchemy import text
 
-    # Generate 768-dim query embedding
+    # Generate 384-dim query embedding
     emb_resp = await embed_client.embed(query)
     emb_str = "[" + ",".join(str(x) for x in emb_resp) + "]"
 
     sql = """
         SELECT id, company, ticker, fiscal_year, doc_type, content,
-               1 - (embedding <=> :emb::vector(768)) AS relevance
+               1 - (embedding <=> :emb::vector(384)) AS relevance
         FROM annual_report_chunks
         WHERE (:ticker IS NULL OR ticker = :ticker)
-        ORDER BY embedding <=> :emb::vector(768)
+        ORDER BY embedding <=> :emb::vector(384)
         LIMIT :limit
     """
 
@@ -411,7 +411,7 @@ CREATE TABLE annual_report_chunks (
     fiscal_year INT NOT NULL,
     doc_type VARCHAR(50) NOT NULL, -- Annual Report / Concall / SEBI LODR 33
     content TEXT NOT NULL,
-    embedding vector(768) NOT NULL,
+    embedding vector(384) NOT NULL,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );
 CREATE INDEX idx_report_chunks_hnsw ON annual_report_chunks USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);

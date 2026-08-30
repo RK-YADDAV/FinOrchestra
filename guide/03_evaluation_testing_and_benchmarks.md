@@ -591,12 +591,12 @@ async def seed():
             emb = await client.models.embed_content(
                 model="gemini-embedding-001",
                 contents=doc["content"],
-                config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT", output_dimensionality=768)
+                config=types.EmbedContentConfig(task_type="RETRIEVAL_DOCUMENT", output_dimensionality=384)
             )
             emb_str = "[" + ",".join(str(x) for x in emb.embeddings[0].values) + "]"
             await conn.execute(text("""
                 INSERT INTO annual_report_chunks (id, company, ticker, fiscal_year, doc_type, content, embedding)
-                VALUES (:id, :c, :t, :fy, :dt, :cnt, :emb::vector(768))
+                VALUES (:id, :c, :t, :fy, :dt, :cnt, :emb::vector(384))
             """), {
                 "id": str(uuid.uuid4()), "c": doc["company"], "t": doc["ticker"],
                 "fy": doc["fiscal_year"], "dt": doc["doc_type"], "cnt": doc["content"], "emb": emb_str
