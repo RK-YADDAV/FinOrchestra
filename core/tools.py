@@ -159,7 +159,7 @@ async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_c
     try:
         emb_resp = await asyncio.to_thread(
             embed_client.models.embed_content,
-            model="text-embedding-004", 
+            model="gemini-embedding-001", 
             contents=query
         )
         # Handle the returned structure properly for new genai sdk
@@ -172,14 +172,13 @@ async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_c
         SELECT id, company, ticker, fiscal_year, doc_type, content,
                1 - (embedding <=> :emb::vector(768)) AS relevance
         FROM annual_report_chunks
-        WHERE (:ticker IS NULL OR ticker = :ticker)
         ORDER BY embedding <=> :emb::vector(768)
         LIMIT :limit
     """
 
     try:
         async with db_engine.connect() as conn:
-            rows = await conn.execute(text(sql), {"emb": emb_str, "ticker": ticker, "limit": limit})
+            rows = await conn.execute(text(sql), {"emb": emb_str, "limit": limit})
             results = rows.mappings().all()
 
         if not results:

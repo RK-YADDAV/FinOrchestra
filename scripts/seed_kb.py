@@ -71,10 +71,10 @@ load_dotenv()
 
 async def embed_text(client, txt: str) -> str:
     """Helper to embed text and return pgvector string format."""
-    # We use text-embedding-004 as recommended!
+    # Reverting to gemini-embedding-001 as the user's API key does not support text-embedding-004
     emb = await asyncio.to_thread(
         client.models.embed_content,
-        model="text-embedding-004",
+        model="gemini-embedding-001",
         contents=txt,
     )
     return "[" + ",".join(str(x) for x in emb.embeddings[0].values[:768]) + "]"
