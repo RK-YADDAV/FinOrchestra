@@ -183,7 +183,7 @@ async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_c
 
     try:
         async with db_engine.connect() as conn:
-            rows = await conn.execute(text(sql), {"emb": emb_str, "limit": limit})
+            rows = await conn.execute(text(sql), {"emb": emb_str, "ticker": ticker, "limit": limit})
             results = rows.mappings().all()
 
         if not results:
