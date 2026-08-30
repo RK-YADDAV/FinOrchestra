@@ -13,7 +13,7 @@ seed:
 	python -m scripts.seed_kb
 
 eval:
-	python -m eval.harness
+	PYTHONUNBUFFERED=1 python -m eval.harness
 
 lint:
 	python -m py_compile core/context.py

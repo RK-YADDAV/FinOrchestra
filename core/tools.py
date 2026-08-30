@@ -167,7 +167,7 @@ async def tool_filings_rag(query: str, ticker: Optional[str], db_engine, embed_c
     # Generate 384-dim query embedding
     try:
         model = get_embedding_model()
-        query_vector = await asyncio.to_thread(model.encode, query)
+        query_vector = model.encode(query)
         emb_str = "[" + ",".join(str(x) for x in query_vector.tolist()) + "]"
     except Exception as e:
         return ToolResult(success=False, error_code="EXEC_ERROR", error_message=f"Embedding failed: {e}", tool_name="filings_rag", latency_ms=(time.monotonic() - start) * 1000)

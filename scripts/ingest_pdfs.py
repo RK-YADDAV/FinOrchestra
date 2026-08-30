@@ -82,20 +82,27 @@ async def ingest_pdfs():
                 
                 # Step 2: Read pages and chunk them
                 print("Chunking and Embedding text (locally)...")
+                from langchain_text_splitters import RecursiveCharacterTextSplitter
+                text_splitter = RecursiveCharacterTextSplitter(
+                    chunk_size=1000,
+                    chunk_overlap=200,
+                    length_function=len,
+                )
                 
-                for i, page in enumerate(reader.pages):
+                full_text = ""
+                for page in reader.pages:
                     page_text = page.extract_text()
-                    if not page_text or len(page_text.strip()) < 50:
-                        continue # Skip empty pages
-                        
-                    # Cap at 9000 chars per page to guarantee we stay under the embedding token limit
-                    safe_chunk = page_text[:9000]
-                    
+                    if page_text:
+                        full_text += page_text + "\n"
+                
+                chunks = text_splitter.split_text(full_text)
+                
+                for i, chunk in enumerate(chunks):
                     try:
-                        emb = await asyncio.to_thread(model.encode, safe_chunk)
+                        emb = await asyncio.to_thread(model.encode, chunk)
                         emb_vector = "[" + ",".join(str(x) for x in emb.tolist()) + "]"
                         
-                        meta_json = json.dumps({"source_file": os.path.basename(pdf_path), "page": i+1})
+                        meta_json = json.dumps({"source_file": os.path.basename(pdf_path), "chunk_index": i+1})
                         
                         await conn.execute(text("""
                             INSERT INTO annual_report_chunks 
@@ -103,12 +110,12 @@ async def ingest_pdfs():
                             VALUES (:id, :c, :t, :fy, :dt, 'text', :cnt, CAST(:emb AS vector(384)), :meta)
                         """), {
                             "id": str(uuid.uuid4()), "c": c, "t": t, "fy": fy, "dt": dt,
-                            "cnt": safe_chunk, "emb": emb_vector, "meta": meta_json
+                            "cnt": chunk, "emb": emb_vector, "meta": meta_json
                         })
-                        print(f"  -> Inserted Page {i+1} successfully.")
+                        print(f"  -> Inserted Chunk {i+1} successfully.")
                         
                     except Exception as e:
-                        print(f"  -> Failed to insert Page {i+1}: {e}")
+                        print(f"  -> Failed to insert Chunk {i+1}: {e}")
 
             except Exception as e:
                 print(f"Failed to read PDF {pdf_path}. Error: {e}")

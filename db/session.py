@@ -24,7 +24,7 @@ def get_isolated_engine(readonly: bool = False):
     url = DATABASE_URL
     if readonly:
         primary_user = os.environ.get("POSTGRES_USER", "postgres")
-        readonly_user = os.environ.get("POSTGRES_READONLY_USER", "fin_readonly")
-        # Replace only the username in the connection string without destroying the protocol 'postgresql'
-        url = url.replace(f"://{primary_user}", f"://{readonly_user}")
+        readonly_user = os.environ.get("POSTGRES_READONLY_USER")
+        if readonly_user:
+            url = url.replace(f"://{primary_user}", f"://{readonly_user}")
     return create_async_engine(url, poolclass=NullPool)

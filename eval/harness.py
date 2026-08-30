@@ -37,7 +37,8 @@ class EvaluationHarness:
             res = await self._run_single(tc, run_id)
             results.append(res)
             print(f"  Score: {res['composite_score']} | Math: {res['math_accuracy']} | Premise: {res['premise_rejection']}")
-            await asyncio.sleep(2.0)
+            print("Sleeping 60 seconds to avoid Google Gemini free-tier 15 RPM rate limits...")
+            await asyncio.sleep(60.0)
 
         total_score = sum(r["composite_score"] for r in results) / max(len(results), 1)
         await self._persist_run(run_id, total_score, results)
