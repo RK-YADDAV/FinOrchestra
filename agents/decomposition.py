@@ -19,8 +19,8 @@ Allowed Task Types:
 Return JSON:
 {{
   "sub_tasks": [
-    {{"id": "t1", "title": "Retrieve Standalone vs Consolidated Debt from FY24 Annual Report", "task_type": "filing_rag", "deps": []}},
-    {{"id": "t2", "title": "Compute FY24 ROCE in \u20b9 Crores", "task_type": "quant_calc", "deps": ["t1"]}}
+    {{"id": "t1", "title": "Retrieve Standalone vs Consolidated Debt from FY25 Annual Report", "task_type": "filing_rag", "deps": []}},
+    {{"id": "t2", "title": "Compute FY25 ROCE in \u20b9 Crores", "task_type": "quant_calc", "deps": ["t1"]}}
   ]
 }}"""
 

@@ -26,7 +26,7 @@ We do **not** dumb down or skip any architectural depth—every async lock, vect
 
 To understand how FinOrchestra coordinates multiple AI models without chaos, imagine a top-tier Mumbai institutional equity research desk analyzing a complex corporate query:
 
-> *"Evaluate Tata Motors' JLR debt reduction trajectory, calculate Standalone vs. Consolidated ROCE for FY24 in ₹ Crores, and check for promoter pledging risks."*
+> *"Evaluate Tata Motors' JLR debt reduction trajectory, calculate Standalone vs. Consolidated ROCE for FY25 in ₹ Crores, and check for promoter pledging risks."*
 
 In a traditional, messy office (or a naive AI pipeline), analysts shout over each other, pass loose papers down the hallway, and make arithmetic errors in their heads. 
 
@@ -241,11 +241,11 @@ class RetrievedChunk(BaseModel):
     id: str = Field(default_factory=lambda: f"chunk_{uuid.uuid4().hex[:6]}")
     company: str                   # e.g., "Reliance Industries", "Tata Motors"
     ticker: str                    # e.g., "RELIANCE", "TATAMOTORS"
-    document_type: str             # "Annual Report FY24", "Q3 Concall", "SEBI LODR 33"
+    document_type: str             # "Annual Report FY25", "Q3 Concall", "SEBI LODR 33"
     fiscal_year: int = 2024
     page_number: Optional[int] = None
     text: str
-    source_tag: str                # e.g., "[BSE:RELIANCE:FY24:P128]"
+    source_tag: str                # e.g., "[BSE:RELIANCE:FY25:P128]"
     relevance_score: float = 0.0
 
 
@@ -268,7 +268,7 @@ class AuditFlag(BaseModel):
 
 class ProvenanceEntry(BaseModel):
     sentence: str
-    source_tag: str                # e.g., "[BSE:TATAMOTORS:FY24:P84]" or "[CALCULATION:ROCE]"
+    source_tag: str                # e.g., "[BSE:TATAMOTORS:FY25:P84]" or "[CALCULATION:ROCE]"
     chunk_id: Optional[str] = None
 
 
@@ -628,7 +628,7 @@ Allowed Task Types:
 Return JSON:
 {{
   "sub_tasks": [
-    {{"id": "t1", "title": "Retrieve FY24 Debt and EBIT from Annual Report", "task_type": "filing_rag", "deps": []}},
+    {{"id": "t1", "title": "Retrieve FY25 Debt and EBIT from Annual Report", "task_type": "filing_rag", "deps": []}},
     {{"id": "t2", "title": "Compute ROCE in ₹ Crores", "task_type": "quant_calc", "deps": ["t1"]}}
   ]
 }}"""

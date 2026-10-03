@@ -72,9 +72,6 @@ To run the evaluation suite:
 make eval
 ```
 
-> **Note on Rate Limits**: The orchestration pipeline executes 5-9 LLM reasoning steps per query. If you are using a Free-Tier Google Gemini API key, you will likely encounter `429 RESOURCE_EXHAUSTED` quotas (15 RPM). A Pay-As-You-Go tier is recommended for full continuous benchmark testing.
-
----
 
 ## 📚 Documentation
 

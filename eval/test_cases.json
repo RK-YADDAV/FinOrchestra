@@ -3,7 +3,7 @@
     "id": "tc_02",
     "category": "BASELINE",
     "difficulty": "EASY",
-    "query": "What was TCS's operating margin (EBIT margin) percentage in FY24?",
+    "query": "What was TCS's operating margin (EBIT margin) percentage in FY25?",
     "ground_truth": "24.6%",
     "key_facts": [
       "24.6%"
@@ -20,7 +20,7 @@
     "id": "tc_16",
     "category": "BASELINE",
     "difficulty": "EASY",
-    "query": "What was TCS's Q1 FY27 revenue in both Rupee and Dollar terms, and what was the YoY growth in Rupee terms?",
+    "query": "What was TCS's Q1 FY25 revenue in both Rupee and Dollar terms, and what was the YoY growth in Rupee terms?",
     "ground_truth": "\u20b972,275 crore ($7,624 million); 13.9% YoY growth",
     "key_facts": [
       "72275",
@@ -28,7 +28,7 @@
       "13.9%"
     ],
     "scoring_hints": {
-      "metric": "Q1 FY27 Revenue and YoY growth",
+      "metric": "Q1 FY25 Revenue and YoY growth",
       "unit": "\u20b9 Crores / $ Millions"
     },
     "expected_min_tool_calls": 1,
@@ -39,7 +39,7 @@
     "id": "tc_17",
     "category": "BASELINE",
     "difficulty": "MEDIUM",
-    "query": "Analyze the reasons for the sequential decline in TCS's operating margins during Q1 FY27 and state the final operating margin percentage.",
+    "query": "Analyze the reasons for the sequential decline in TCS's operating margins during Q1 FY25 and state the final operating margin percentage.",
     "ground_truth": "Operating margin was 24%, declining 130 bps sequentially primarily due to wage hikes (annual increments for global workforce).",
     "key_facts": [
       "24%",
@@ -58,7 +58,7 @@
     "id": "tc_18",
     "category": "BASELINE",
     "difficulty": "EASY",
-    "query": "What was the annualized AI services revenue for TCS at the end of Q1 FY27?",
+    "query": "What was the annualized AI services revenue for TCS at the end of Q1 FY25?",
     "ground_truth": "US$2.6 billion",
     "key_facts": [
       "2.6"

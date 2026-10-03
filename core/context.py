@@ -21,11 +21,11 @@ class RetrievedChunk(BaseModel):
     id: str = Field(default_factory=lambda: f"chunk_{uuid.uuid4().hex[:6]}")
     company: str                   # e.g., "Reliance Industries", "TCS", "HDFC Bank"
     ticker: str                    # e.g., "RELIANCE", "TCS", "HDFCBANK"
-    document_type: str             # "Annual Report FY24", "Q3 Concall", "SEBI LODR 33"
-    fiscal_year: int = 2024
+    document_type: str             # "Annual Report FY25", "Annual Report FY25", "Q3 Concall", "SEBI LODR 33"
+    fiscal_year: int = 2025
     page_number: Optional[int] = None
     text: str
-    source_tag: str                # e.g., "[BSE:RELIANCE:FY24:P128]"
+    source_tag: str                # e.g., "[BSE:RELIANCE:FY25:P128]"
     relevance_score: float = 0.0
 
 
@@ -48,7 +48,7 @@ class AuditFlag(BaseModel):
 
 class ProvenanceEntry(BaseModel):
     sentence: str
-    source_tag: str                # e.g., "[BSE:TATAMOTORS:FY24:P84]" or "[CALCULATION:ROCE]"
+    source_tag: str                # e.g., "[BSE:TATAMOTORS:FY25:P84]" or "[CALCULATION:ROCE]"
     chunk_id: Optional[str] = None
 
 
