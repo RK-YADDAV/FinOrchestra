@@ -60,10 +60,8 @@ class AuditorSynthesizerAgent(BaseAgent):
         )
         
         await budget_mgr.consume(self.agent_id, prompt)
-        resp = await asyncio.to_thread(
-            self.client.models.generate_content,
-            model="gemini-3.6-flash",
-            contents=prompt,
+        resp = await self._call_llm(
+            prompt,
             config={"response_mime_type": "application/json"}
         )
         

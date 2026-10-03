@@ -217,7 +217,7 @@ async def tool_indian_sql(nl_query: str, db_engine, llm_client) -> ToolResult:
     prompt = f"Convert to PostgreSQL SQL (SELECT only):\nSchema: {SCHEMA_DESCRIPTION}\nQuery: {nl_query}\nReturn ONLY the SQL string without markdown blocks or explanation."
     try:
         resp = await llm_client.models.generate_content(
-            model="gemini-3.6-flash", 
+            model="gemini-3.8-flash", 
             contents=prompt
         )
         sql = resp.text.strip().strip("```sql").strip("```").strip()

@@ -27,11 +27,7 @@ class QuantToolRunnerAgent(BaseAgent):
         prompt = QUANT_PROMPT.format(query=state.query, retrieved_data=chunks_text)
         
         await budget_mgr.consume(self.agent_id, prompt)
-        resp = await asyncio.to_thread(
-            self.client.models.generate_content,
-            model="gemini-3.6-flash",
-            contents=prompt
-        )
+        resp = await self._call_llm(prompt)
         
         # Extract python code
         text = resp.text

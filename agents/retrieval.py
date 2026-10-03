@@ -67,11 +67,7 @@ class IndianFilingRetrievalAgent(BaseAgent):
             prompt = RETRIEVAL_HOP1_PROMPT.format(query=state.query, chunks=chunks_text)
             
             await budget_mgr.consume(self.agent_id, prompt)
-            resp = await asyncio.to_thread(
-                self.client.models.generate_content,
-                model="gemini-3.6-flash",
-                contents=prompt
-            )
+            resp = await self._call_llm(prompt)
             
             second_hop_query = None
             for line in resp.text.splitlines():

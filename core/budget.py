@@ -31,7 +31,7 @@ class ContextBudgetManager:
 
     def count_tokens(self, text: str) -> int:
         try:
-            resp = self._client.models.count_tokens(model="gemini-2.5-flash", contents=text)
+            resp = self._client.models.count_tokens(model="gemini-3.8-flash", contents=text)
             return max(1, resp.total_tokens)
         except Exception:
             return max(1, len(text) // 4)

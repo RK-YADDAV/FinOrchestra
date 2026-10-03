@@ -24,21 +24,25 @@ Return JSON:
 class OrchestratorAgent(BaseAgent):
     def __init__(self):
         super().__init__("orchestrator")
+        self._retrieval_attempts = 0
 
     async def run(self, state: SharedState, budget_mgr: ContextBudgetManager, redis_pub=None) -> str:
         # Simple rule-based fast path routing for common flows to save tokens
         if state.turn == 0:
             next_agent = "decomposition"
             reasoning = "Initial turn, delegating to decomposition"
-        elif state.subtasks and not state.chunks:
+        elif state.subtasks and not state.chunks and self._retrieval_attempts == 0:
             next_agent = "retrieval"
             reasoning = "Subtasks created, need to retrieve filings"
+            self._retrieval_attempts += 1
         elif state.chunks and not state.calculations:
             next_agent = "quant_runner"
             reasoning = "Chunks retrieved, running quant calculations"
-        elif state.chunks and state.calculations and not state.final_memo:
+        elif (state.chunks or self._retrieval_attempts > 0) and not state.final_memo:
+            # Either we have chunks + calcs, or retrieval was attempted but returned 0 chunks
+            # In either case, proceed to synthesis (it will work with whatever data is available)
             next_agent = "auditor_synthesizer"
-            reasoning = "Calculations done, running auditor synthesis"
+            reasoning = "Proceeding to auditor synthesis with available data"
         elif state.final_memo:
             next_agent = "done"
             reasoning = "Final memo generated, finishing job"
@@ -47,10 +51,8 @@ class OrchestratorAgent(BaseAgent):
             prompt = ORCHESTRATOR_PROMPT
             await budget_mgr.consume(self.agent_id, prompt)
 
-            resp = await asyncio.to_thread(
-                self.client.models.generate_content,
-                model="gemini-3.6-flash",
-                contents=prompt,
+            resp = await self._call_llm(
+                prompt,
                 config={"response_mime_type": "application/json"}
             )
             try:
